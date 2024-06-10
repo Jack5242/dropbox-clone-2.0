@@ -83,24 +83,95 @@ public class client{
 
     }
 
+    public static int serverPing(){
+        try (Socket s = new Socket("localhost", 8000)) {
+            s.close();
+            return 8000;
+        } catch (IOException ex) {
+            /* ignore */
+        }
+        try (Socket s = new Socket("localhost", 8001)) {
+            s.close();
+            return 8001;
+        } catch (IOException ex) {
+            /* ignore */
+        }
+        return -1;
+    }
+
     public static void registerNewAccount(){
+        int port = serverPing();
+        if (port == -1){
+            System.out.println("no server available");
+        }
+        try(
+            Socket socket = new Socket("localhost", port);
+            DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+        ){
+            outToServer.writeUTF("register");
+            outToServer.flush();
+            outToServer.close();
+            socket.close();
+        }
+        catch (Exception e){
+        }
 
     }
    
     public static boolean loginAccount(String username, String pass){
-        System.out.println(username + " " + pass);
-        if (username.equals("jack")){
-            return true;
+        int port = serverPing();
+        if (port == -1){
+            System.out.println("no server available");
+        }
+        try(
+            Socket socket = new Socket("localhost", port);
+            DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+        ){
+            outToServer.writeUTF("login");
+            outToServer.flush();
+            outToServer.close();
+            socket.close();
+        }
+        catch (Exception e){
         }
         return false;
     }
 
     public static void syncFile(){
+        int port = serverPing();
+        if (port == -1){
+            System.out.println("no server available");
+        }
+        try(
+            Socket socket = new Socket("localhost", port);
+            DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+        ){
+            outToServer.writeUTF("sync");
+            outToServer.flush();
+            outToServer.close();
+            socket.close();
+        }
+        catch (Exception e){
+        }
 
     };
 
     public static void downloadFile(){
-
+        int port = serverPing();
+        if (port == -1){
+            System.out.println("no server available");
+        }
+        try(
+            Socket socket = new Socket("localhost", port);
+            DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+        ){
+            outToServer.writeUTF("download");
+            outToServer.flush();
+            outToServer.close();
+            socket.close();
+        }
+        catch (Exception e){
+        }
     }
 
 }
