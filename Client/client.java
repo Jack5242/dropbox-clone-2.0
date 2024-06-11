@@ -2,10 +2,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class client{
@@ -71,6 +70,7 @@ public class client{
                         }
                         break;
                     case 3:
+                        System.exit(0);
                         break;
                 
                     default:
@@ -133,7 +133,7 @@ public class client{
             return;
         }
         try(
-            Socket socket = new Socket("localhost", 8000);
+            Socket socket = new Socket("localhost", port);
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
         ){
             dos.writeUTF("register");
@@ -162,7 +162,6 @@ public class client{
             DataInputStream dis = new DataInputStream(socket.getInputStream());
         ){
             dos.writeUTF("login");
-            dos.flush();
             dos.flush();
             dos.writeUTF(username);
             dos.flush();
@@ -277,14 +276,49 @@ public class client{
         }
         try(
             Socket socket = new Socket("localhost", port);
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
         ){
+            syncMode = false;
+
             dos.writeUTF("download");
             dos.flush();
+            dos.writeUTF(username);
+            dos.flush();
+            dos.writeUTF(pass);
+            dos.flush();
+
+            receiveDirectory(dis);
+
+            syncMode = true;
             dos.close();
             socket.close();
         }
         catch (Exception e){
+        }
+    }
+
+    public static void receiveDirectory(DataInputStream dis) throws IOException {
+        String rootFolderName = dis.readUTF(); // Read the root folder name
+        int numberOfFiles = dis.readInt(); // Read the number of files
+
+        for (int i = 0; i < numberOfFiles; i++) {
+            String relativeFilePath = dis.readUTF();
+            long fileSize = dis.readLong();
+
+            File file = new File(rootFolderName, relativeFilePath);
+            file.getParentFile().mkdirs(); // Create parent directories if they don't exist
+
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while (fileSize > 0 && (bytesRead = dis.read(buffer, 0, (int)Math.min(buffer.length, fileSize))) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                    fileSize -= bytesRead;
+                }
+            }
+
+            System.out.println("Received file: " + file.getAbsolutePath());
         }
     }
 

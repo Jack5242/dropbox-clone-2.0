@@ -7,23 +7,24 @@ import java.net.Socket;
 import java.util.Hashtable;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.file.Files;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.File;
+import java.util.Scanner;
 
 
 public class server {
     public static void main(String [] args){
-		int port = 8000;
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Server operate on port? : ");
+        int port = scanner.nextInt();
+		
         ServerSocket welcomeSocket = null;
         try{
             welcomeSocket = new ServerSocket(port);
         }
         catch (IOException e){}
         
-
-
 		while(true){
 			
 			Implementation request = new Implementation(welcomeSocket);
@@ -93,10 +94,25 @@ final class Implementation implements Runnable{
             }
 
             if (option.equals("sync")){
-                receiveDirectory(dis);
+                syncFile(dis);
             }
 
             if (option.equals("download")){
+                username = dis.readUTF();
+                pass = dis.readUTF();
+
+                if(loginAccount(username, pass)){
+                    File folder = new File(username);
+                    if (!folder.exists())
+                    {
+                        folder.mkdirs();
+                    }
+                    dos.writeUTF(folder.getName());
+                    dos.writeInt(countFiles(folder, folder.getAbsolutePath().length() + 1));
+
+                    sendDirectory(folder, dos, folder.getAbsolutePath().length() + 1);
+                }
+                
             }
 
 
@@ -171,12 +187,7 @@ final class Implementation implements Runnable{
         return false;
     }
 
-    public static void syncFile(){
-        
-
-    }
-
-    public static void receiveDirectory(DataInputStream dis) throws IOException {
+    public static void syncFile(DataInputStream dis) throws IOException {
         String rootFolderName = dis.readUTF(); // Read the root folder name
         int numberOfFiles = dis.readInt(); // Read the number of files
 
@@ -200,9 +211,53 @@ final class Implementation implements Runnable{
         }
     }
 
-    public static void downloadFile(){
 
+    private static void sendDirectory(File folder, DataOutputStream dos, int rootPathLength) throws IOException {
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                sendDirectory(file, dos, rootPathLength);
+            } else {
+                sendFile(file, dos, rootPathLength);
+            }
+        }
     }
 
+    private static int countFiles(File folder, int rootPathLength) {
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return 0;
+        }
+
+        int count = 0;
+        for (File file : files) {
+            if (file.isDirectory()) {
+                count += countFiles(file, rootPathLength);
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static void sendFile(File file, DataOutputStream dos, int rootPathLength) throws IOException {
+        String relativePath = file.getAbsolutePath().substring(rootPathLength);
+        dos.writeUTF(relativePath);
+        dos.writeLong(file.length());
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                dos.write(buffer, 0, bytesRead);
+            }
+        }
+
+        // System.out.println("Sent file: " + file.getAbsolutePath());
+    }
     
 }
