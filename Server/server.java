@@ -33,7 +33,6 @@ public class server {
 			
 			thread.start();
 		}
-
 	}
 }
 
@@ -81,14 +80,15 @@ final class Implementation implements Runnable{
                 System.out.print("register function");
                 username = dis.readUTF();
                 pass = dis.readUTF();
-                System.out.print(username+pass);
+                
                 registerAccount(username, pass);
+                System.out.print("user registration: " + username + " " +pass);
             }
 
             if (option.equals("login")){
                 username = dis.readUTF();
                 pass = dis.readUTF();
-                System.out.print(username+pass);
+                System.out.print("user login: " + username + " " +pass);
                 dos.writeBoolean(loginAccount(username, pass));
                 dos.flush();
             }

@@ -41,6 +41,7 @@ public class client{
                 KeyboardInput.nextLine();
 
                 switch (userInput) {
+                    //register new account
                     case 1:
                         System.out.println("enter username:");
                         username = KeyboardInput.nextLine();
@@ -49,6 +50,7 @@ public class client{
                         pass = KeyboardInput.nextLine();
                         registerNewAccount(username, pass);
                         break;
+                        //login to account
                     case 2:
                         System.out.println("enter username:");
                         username = KeyboardInput.nextLine();
@@ -68,8 +70,13 @@ public class client{
                             }
                             uiMode = 2;
                         }
+                        else {
+                            System.out.println("login failed");
+                        }
                         break;
+                        //close client
                     case 3:
+                    System.out.println("exit program");
                         System.exit(0);
                         break;
                 
@@ -84,17 +91,21 @@ public class client{
                 int userInput = KeyboardInput.nextInt();
                 KeyboardInput.nextLine();
                 switch (userInput) {
+                    //turn on/off sync mode
                     case 1:
                         syncMode = !syncMode;
                         break;
+                        //download file from server
                     case 2: 
                         downloadFile();
                         break;
+                        //logout
                     case 3: 
                         syncMode = false;
                         uiMode = 1;
                         break;
                     default:
+                        System.out.println("Please enter again");
                         break;
                 }
             } 
