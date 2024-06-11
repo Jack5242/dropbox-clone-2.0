@@ -11,9 +11,13 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.File;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.*;
 
 
 public class server {
+
     public static void main(String [] args){
         Scanner scanner = new Scanner(System.in);
         System.out.print("Server operate on port? : ");
@@ -25,6 +29,7 @@ public class server {
         }
         catch (IOException e){}
         
+
 		while(true){
 			
 			Implementation request = new Implementation(welcomeSocket);
@@ -43,14 +48,7 @@ final class Implementation implements Runnable{
     static String accountInfoFileName = "acc.ser";
 
     public Implementation(ServerSocket welcomeSocket){
-        this.welcomeSocket = welcomeSocket;
-        //open account information file
-        File accountInfoFile = new File(accountInfoFileName);
-		if (!accountInfoFile.exists())
-		{
-			saveHashtableToFile(accountInfo, accountInfoFileName);
-		}
-        accountInfo = loadHashtableFromFile(accountInfoFileName);
+        this.welcomeSocket = welcomeSocket;        
     }
 
     @Override
@@ -77,6 +75,14 @@ final class Implementation implements Runnable{
             System.out.println(option);
             
             if (option.equals("register")){
+
+                File accountInfoFile = new File(accountInfoFileName);
+                if (!accountInfoFile.exists())
+                {
+                    saveHashtableToFile(accountInfo, accountInfoFileName);
+                }
+                accountInfo = loadHashtableFromFile(accountInfoFileName);
+
                 System.out.print("register function");
                 username = dis.readUTF();
                 pass = dis.readUTF();
@@ -86,9 +92,16 @@ final class Implementation implements Runnable{
             }
 
             if (option.equals("login")){
+                File accountInfoFile = new File(accountInfoFileName);
+                if (!accountInfoFile.exists())
+                {
+                    saveHashtableToFile(accountInfo, accountInfoFileName);
+                }
+                accountInfo = loadHashtableFromFile(accountInfoFileName);
+
                 username = dis.readUTF();
                 pass = dis.readUTF();
-                System.out.print("user login: " + username + " " +pass);
+                System.out.println("user login: " + username + " " +pass);
                 dos.writeBoolean(loginAccount(username, pass));
                 dos.flush();
             }
@@ -115,6 +128,34 @@ final class Implementation implements Runnable{
                 
             }
 
+            if (option.equals("seefile")){
+                username = dis.readUTF();
+                File directory = new File(username); // Change to the directory you want to send
+                List<String> directoryStructure = listFiles(directory);
+
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(directoryStructure);
+                oos.flush();
+                byte[] dir = bos.toByteArray();
+
+                // Send the length of the byte array first
+                dos.writeInt(dir.length);
+                dos.flush();
+                // Send the byte array
+                dos.write(dir);
+                dos.flush();
+            }
+
+
+            if(option.equals("delete")){
+                username = dis.readUTF();
+                String fileName = dis.readUTF();
+                String path = username.concat("/");
+                path = path.concat(fileName);
+                File file = new File(path);
+                file.delete();
+            }
 
             //close connection
             dis.close();
@@ -125,7 +166,28 @@ final class Implementation implements Runnable{
             System.out.println("somethings wrong");
         }
     }
-	
+
+    public static List<String> listFiles(File directory) {
+        List<String> fileList = new ArrayList<>();
+        listFilesRecursive(directory, "", fileList);
+        return fileList;
+    }
+
+    public static void listFilesRecursive(File directory, String indent, List<String> fileList) {
+        if (directory.isDirectory()) {
+            fileList.add(indent + "[" + directory.getName() + "]");
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    listFilesRecursive(file, indent + "    ", fileList);
+                }
+            }
+        } else {
+            fileList.add(indent + directory.getName());
+        }
+    }
+
+
     public static void saveHashtableToFile(Hashtable<String, String> hashtable, String filename) {
         try (FileOutputStream fileOut = new FileOutputStream(filename);
             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
@@ -133,7 +195,7 @@ final class Implementation implements Runnable{
             out.flush();
             out.close();
             fileOut.close();
-            // System.out.println("Serialized data is saved in " + filename);
+            System.out.println("Serialized data is saved in " + filename);
         } catch (EOFException e) {
             //this is normal
         } catch(IOException i){
@@ -149,7 +211,7 @@ final class Implementation implements Runnable{
             hashtable = (Hashtable<String, String>) in.readObject();
             fileIn.close();
             in.close();
-            // System.out.println("Serialized data is loaded from " + filename);
+            System.out.println("Serialized data is loaded from " + filename);
         } catch (IOException i) {
             i.printStackTrace();
         } catch (ClassNotFoundException c) {

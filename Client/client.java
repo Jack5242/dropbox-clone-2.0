@@ -1,10 +1,13 @@
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.List;
 import java.util.Scanner;
 
 public class client{
@@ -87,7 +90,7 @@ public class client{
             }
 
             if (uiMode == 2){
-                System.out.println("choose your option: \n1. sync file: " + syncMode + "\n2. download\n3. logout");
+                System.out.println("choose your option: \n1. sync file: " + syncMode + "\n2. download\n3. see server files\n4. delete file\n5. logout");
                 int userInput = KeyboardInput.nextInt();
                 KeyboardInput.nextLine();
                 switch (userInput) {
@@ -100,17 +103,25 @@ public class client{
                         downloadFile();
                         break;
                         //logout
-                    case 3: 
+                    
+                    case 3:
+                        seeFile();
+                        break;
+
+                    case 4: 
+                        deleteFile();
+                        break;
+                    case 5: 
                         syncMode = false;
                         uiMode = 1;
                         break;
+
                     default:
                         System.out.println("Please enter again");
                         break;
                 }
             } 
         }
-
     }
 
     public static int serverPing(){
@@ -303,6 +314,7 @@ public class client{
 
             syncMode = true;
             dos.close();
+            dis.close();
             socket.close();
         }
         catch (Exception e){
@@ -333,5 +345,76 @@ public class client{
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public static void seeFile(){
+        int port = serverPing();
+        if (port == -1){
+            System.out.println("no server available");
+            return;
+        }
+        try(
+            Socket socket = new Socket("localhost", port);
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+        ){
+            dos.writeUTF("seefile");
+            dos.flush();
+            dos.writeUTF(username);
+            dos.flush();
+
+            int length = dis.readInt();
+            byte[] dirBytes = new byte[length];
+
+            // Read the byte array
+            dis.readFully(dirBytes);
+
+            // Deserialize the byte array to an Account object
+            ByteArrayInputStream bis = new ByteArrayInputStream(dirBytes);
+            ObjectInputStream ois = new ObjectInputStream(bis);
+
+            List<String> directoryStructure = (List<String>) ois.readObject();
+            
+            for (String line : directoryStructure) {
+                System.out.println(line);
+            }
+
+            dos.close();
+            ois.close();
+            socket.close();
+        }
+        catch (Exception e){
+            System.out.println("see file error");
+        }
+    }
+
+    public static void deleteFile(){
+        int port = serverPing();
+        if (port == -1){
+            System.out.println("no server available");
+        }
+        try(
+            Socket socket = new Socket("localhost", port);
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+        ){
+            Scanner keyboard = new Scanner (System.in);
+            dos.writeUTF("delete");
+            dos.flush();
+            dos.writeUTF(username);
+            dos.flush();
+            
+            System.out.print("enter file dir you want to delete: ");
+            String path = keyboard.nextLine();
+            dos.writeUTF(path);
+            dos.flush();
+
+            
+            dos.close();
+            dis.close();
+            socket.close();
+        }
+        catch (Exception e){
+        }
+    }
 }
 
