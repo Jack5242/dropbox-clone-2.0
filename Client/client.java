@@ -32,12 +32,9 @@ public class client{
         //2: syncing screen
         int uiMode = 1;
         
-        
-
         // initiate connection to server
         while (true){
             
-
             if (uiMode == 1){
                 System.out.println("choose your option: \n1. register\n2. login\n3. exit");
                 int userInput = KeyboardInput.nextInt();
@@ -90,7 +87,8 @@ public class client{
             }
 
             if (uiMode == 2){
-                System.out.println("choose your option: \n1. sync file: " + syncMode + "\n2. download\n3. see server files\n4. delete file\n5. logout");
+                System.out.println("choose your option: \n1. sync file: " + syncMode + "\n2. download\n3. see server files\n4. delete file\n5. logout");                
+            
                 int userInput = KeyboardInput.nextInt();
                 KeyboardInput.nextLine();
                 switch (userInput) {
@@ -259,7 +257,7 @@ public class client{
             }
         }
 
-        System.out.println("Sent file: " + file.getAbsolutePath());
+        // System.out.println("Sent file: " + file.getAbsolutePath());
     }
 
 
@@ -312,7 +310,6 @@ public class client{
 
             receiveDirectory(dis);
 
-            syncMode = true;
             dos.close();
             dis.close();
             socket.close();
@@ -377,8 +374,10 @@ public class client{
             for (String line : directoryStructure) {
                 System.out.println(line);
             }
-
+            
+            bis.close();
             dos.close();
+            dis.close();
             ois.close();
             socket.close();
         }

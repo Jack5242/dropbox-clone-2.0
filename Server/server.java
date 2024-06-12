@@ -72,9 +72,9 @@ final class Implementation implements Runnable{
             String pass = "";
 
             option = dis.readUTF();
-            System.out.println(option);
             
             if (option.equals("register")){
+                System.out.println(option);
 
                 File accountInfoFile = new File(accountInfoFileName);
                 if (!accountInfoFile.exists())
@@ -83,7 +83,7 @@ final class Implementation implements Runnable{
                 }
                 accountInfo = loadHashtableFromFile(accountInfoFileName);
 
-                System.out.print("register function");
+                System.out.println("register function");
                 username = dis.readUTF();
                 pass = dis.readUTF();
                 
@@ -92,6 +92,8 @@ final class Implementation implements Runnable{
             }
 
             if (option.equals("login")){
+                System.out.println(option);
+
                 File accountInfoFile = new File(accountInfoFileName);
                 if (!accountInfoFile.exists())
                 {
@@ -102,7 +104,19 @@ final class Implementation implements Runnable{
                 username = dis.readUTF();
                 pass = dis.readUTF();
                 System.out.println("user login: " + username + " " +pass);
-                dos.writeBoolean(loginAccount(username, pass));
+                boolean result = loginAccount(username, pass);
+                dos.writeBoolean(result);
+                if(result == true){
+                    File userFolder = new File(username);
+                    if (!userFolder.exists()){
+                        try{
+                            userFolder.mkdir();
+                        }
+                        catch(Exception e){
+                            System.out.println("fail to create folder");
+                        }
+                    }
+                }
                 dos.flush();
             }
 
@@ -111,6 +125,8 @@ final class Implementation implements Runnable{
             }
 
             if (option.equals("download")){
+                System.out.println(option);
+
                 username = dis.readUTF();
                 pass = dis.readUTF();
 
@@ -129,6 +145,8 @@ final class Implementation implements Runnable{
             }
 
             if (option.equals("seefile")){
+                System.out.println(option);
+
                 username = dis.readUTF();
                 File directory = new File(username); // Change to the directory you want to send
                 List<String> directoryStructure = listFiles(directory);
@@ -149,6 +167,8 @@ final class Implementation implements Runnable{
 
 
             if(option.equals("delete")){
+                System.out.println(option);
+
                 username = dis.readUTF();
                 String fileName = dis.readUTF();
                 String path = username.concat("/");
@@ -239,6 +259,7 @@ final class Implementation implements Runnable{
     }
 
     public static boolean loginAccount(String username, String pass){
+        
         String value = "";
         if (!accountInfo.contains(username)){
             value = accountInfo.get(username);
@@ -269,7 +290,7 @@ final class Implementation implements Runnable{
                 }
             }
 
-            System.out.println("Received file: " + file.getAbsolutePath());
+            // System.out.println("Received file: " + file.getAbsolutePath());
         }
     }
 

@@ -8,3 +8,5 @@ function:
 
 allow 2 server on port 8000 and 8001
 if more servers are needed, change client src code
+
+important: somehow this program has problem that makes the ram consumption abnormally high, cautious before running the server
